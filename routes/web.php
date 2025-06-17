@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\JobController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -19,3 +19,5 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function() {
     return view('jobs.index'); // مؤقتاً
 })->name('jobs.index');
+Route::get('/jobs', [JobController::class, 'index'])
+    ->name('jobs.index');
