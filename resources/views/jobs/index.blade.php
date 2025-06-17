@@ -3,32 +3,80 @@
 @section('title', 'صفحة الوظائف')
 
 @section('content')
-    <div class="mb-6 flex items-center justify-between">
-        <!-- بحث -->
-        <div class="relative w-1/2">
-            <input
-                type="text"
-                placeholder="ابحث عن وظيفة…"
-                class="w-full border border-gray-300 rounded-full pl-12 pr-4 py-2
-                 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-        </div>
-        <!-- أزرار فلتر/إشعارات -->
-        <div class="flex items-center space-x-4">
-            <button class="p-2 ml-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 transition">
-                <i class="fas fa-filter text-gray-600"></i>
-            </button>
-            <button class="relative p-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 transition">
-                <i class="fas fa-bell text-gray-600"></i>
-                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">
-                  {{ $notificationsCount ?? 0 }}
-                </span>
-            </button>
-        </div>
-    </div>
+    <section class="p-4" x-data="{ showFilters: false }">
 
-    <!-- شبكة بطاقات الوظائف -->
+        {{-- نموذج البحث --}}
+        <form method="GET" action="{{ route('jobs.index') }}" class="flex items-center mb-4">
+            <div class="relative flex-1">
+                <input
+                    name="search"
+                    type="text"
+                    value="{{ request('search') }}"
+                    placeholder="ابحث عن وظيفة…"
+                    class="w-full bg-white rounded-full pl-10 pr-4 py-2 shadow text-sm"
+                />
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+            <button
+                type="button"
+                @click="showFilters = true"
+                class="ml-2 text-xl text-gray-600"
+            ><i class="fas fa-filter"></i></button>
+            <button type="submit" class="ml-2 bg-blue-500 text-white px-4 py-2 rounded-full">بحث</button>
+        </form>
+
+        {{-- فلتر مودال --}}
+        <div
+            x-show="showFilters"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+        >
+            <div class="bg-white rounded-lg p-6 w-11/12 max-w-md" @click.away="showFilters = false">
+                <h2 class="text-lg font-semibold mb-4">الفلاتر</h2>
+                <form method="GET" action="{{ route('jobs.index') }}">
+                    {{-- حافظ على قيمة البحث الحالية --}}
+                    <input type="hidden" name="search" value="{{ request('search') }}">
+
+                    <div class="mb-4">
+                        <label class="block mb-1">الدولة</label>
+                        <select name="country" class="w-full border rounded px-3 py-2">
+                            <option value="">الكل</option>
+                            @foreach($countries as $c)
+                                <option value="{{ $c }}" @if(request('country')==$c) selected @endif>
+                                    {{ $c }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block mb-1">مجال العمل</label>
+                        <select name="job_type_id" class="w-full border rounded px-3 py-2">
+                            <option value="">الكل</option>
+                            @foreach($jobTypes as $id => $type)
+                                <option value="{{ $id }}" @if(request('job_type_id')==$id) selected @endif>
+                                    {{ $type }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="flex justify-end space-x-2">
+                        <button
+                            type="button"
+                            @click="showFilters = false"
+                            class="px-4 py-2 rounded border"
+                        >إلغاء</button>
+                        <button
+                            type="submit"
+                            class="px-4 py-2 bg-green-500 text-white rounded"
+                        >تطبيق</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- شبكة بطاقات الوظائف -->
     <div class="grid grid-cols-3 gap-6">
         @forelse($jobs as $job)
             <div class="group bg-white border border-gray-200 rounded-2xl shadow-sm p-6

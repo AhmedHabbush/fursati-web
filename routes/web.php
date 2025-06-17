@@ -16,8 +16,10 @@ use App\Http\Controllers\JobController;
 //Route::get('/', function () {
 //    return view('welcome');
 //});
-Route::get('/', function() {
-    return view('jobs.index'); // مؤقتاً
-})->name('jobs.index');
-Route::get('/jobs', [JobController::class, 'index'])
+Route::get('/', [JobController::class, 'index'])
     ->name('jobs.index');
+//----------------------------------------
+Route::get('/jobs', [JobController::class, 'index']);
+
+Route::get('/jobs/{id}', [JobController::class, 'show'])
+    ->name('jobs.show');
