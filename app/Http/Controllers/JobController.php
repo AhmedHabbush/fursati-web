@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 
 class JobController extends Controller
 {
@@ -97,5 +98,38 @@ class JobController extends Controller
         }
 
         return view('jobs.show', compact('job'));
+    }
+
+    /**
+     * إرسال طلب التقديم على الوظيفة
+     */
+    public function apply(Request $request, $id)
+    {
+        // نتحقّق من وجود التوكن (أي تسجيل دخول)
+        if (! session('api_token')) {
+            // من يعيدنا للصفحة نفسها مع رسالة خطأ
+            return back()->with('error', 'You must be logged in to apply.');
+        }
+
+        // ملف الفيديو إن وُجد
+        $fileParams = [];
+        if ($request->hasFile('video')) {
+            $fileParams['video'] = fopen($request->file('video')->getPathname(), 'r');
+        }
+
+        try {
+            $response = $this->client->request('POST', "ar/api/job-seeker/jobs/applied/{$id}", [
+                'multipart' => array_merge(
+                    [['name' => 'job_id', 'contents' => $id]],
+                    $fileParams
+                ),
+            ]);
+            Session::flash('success', 'تم التقديم بنجاح!');
+        } catch (\Throwable $e) {
+            Log::error("Error applying job {$id}: ".$e->getMessage());
+            Session::flash('error', 'حدث خطأ أثناء التقديم، حاول مجددًا.');
+        }
+
+        return back();
     }
 }

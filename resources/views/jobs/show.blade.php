@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="flex flex-col h-full">
+    <div x-data="{ showAuth: false, showApply: false }" x-cloak class="flex flex-col h-full">
         {{-- الهيدر --}}
         <div class="bg-green-500 text-white p-4 flex items-center">
             <a href="{{ url()->previous() }}" class="mr-4 text-xl">
@@ -87,11 +87,36 @@
             </div>
 
             {{-- زر التقديم --}}
-            <div class="py-4">
-                <a href="#" class="block bg-green-500 text-white text-center py-3 rounded-full font-semibold">
-                    Apply
-                </a>
+            <div class="py-4 text-center">
+                <button
+                    @click=" {{ session('api_token') ? 'showApply = true' : 'showAuth = true' }} "
+                    class="bg-green-500 text-white py-3 px-8 rounded-full font-semibold"
+                >Apply</button>
             </div>
+
         </div>
     </div>
+    {{-- Auth Prompt --}}
+    <div
+        x-show="showAuth"
+        x-transition
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+        <div
+            @click.away="showAuth = false"
+            class="bg-white rounded-lg p-6 w-80 text-center"
+        >
+            <h3 class="text-lg font-semibold mb-4">You are not registered</h3>
+            <p class="mb-6">You must be a member to apply for jobs.</p>
+            <a
+                href="{{ route('login') }}"
+                class="block mb-2 bg-blue-500 text-white py-2 rounded"
+            >LOGIN</a>
+            <a
+                href="{{ route('register') }}"
+                class="block bg-green-500 text-white py-2 rounded"
+            >SIGN UP</a>
+        </div>
+    </div>
+
 @endsection

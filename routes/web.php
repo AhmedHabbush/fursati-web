@@ -32,3 +32,9 @@ Route::post('/jobs/{id}/favorite', [FavoriteController::class, 'toggle'])
 // قائمة الوظائف المحفوظة
 Route::get('/bookmarks', [FavoriteController::class, 'index'])
     ->name('bookmarks.index');
+
+// فتح نموذج التقديم (في هذه الحالة ليس مساراً مباشراً بل عرض Modal عبر JS)
+// لكن نحتاج مسار استقبال الطلب الفعلي:
+Route::post('/jobs/{id}/apply', [App\Http\Controllers\JobController::class, 'apply'])
+    ->name('jobs.apply');
+
