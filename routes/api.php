@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\FAQController;
@@ -20,10 +21,12 @@ use App\Http\Controllers\Api\PolicyController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::prefix('ar/api')->group(function(){
 
+Route::post('login', [AuthController::class,'login']);
+Route::prefix('ar/api')->group(function(){
     // Job-Seeker Endpoints :contentReference[oaicite:0]{index=0}
-    Route::prefix('job-seeker')->group(function(){
+    Route::prefix('job-seeker')->middleware('auth:sanctum')->group(function(){
+        Route::post('logout', [AuthController::class,'logout']);
         Route::get('all-jobs',           [JobController::class,'index']);
         Route::get('job-details/{id}',   [JobController::class,'show']);
         Route::post('jobs/{id}/mark-favorite', [JobController::class,'toggleFavorite']);

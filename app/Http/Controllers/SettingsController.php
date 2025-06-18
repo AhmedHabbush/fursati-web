@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Faq;
 use App\Models\UserPreference;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
@@ -32,26 +33,16 @@ class SettingsController extends Controller
     // 1. جلب وعرض كل الـ FAQs
     public function faqs()
     {
-        try {
-            $resp = $this->client->request('GET', 'ar/api/faqs');
-            $faqs = json_decode($resp->getBody()->getContents(), true)['data'] ?? [];
-        } catch (\Throwable $e) {
-            Log::error("Error fetching FAQs: ".$e->getMessage());
-            $faqs = [];
-        }
+        // جلب الأسئلة كـ array كي تعمل مع $faq['question']
+        $faqs = Faq::select('id','question','answer')->get()->toArray();
+
         return view('settings.faqs', compact('faqs'));
     }
 
-    // 2. عرض تفاصيل سؤال واحد
+    // صفحة تفاصيل سؤال واحد (اختياري)
     public function faqDetail($id)
     {
-        try {
-            $resp = $this->client->request('GET', "ar/api/faqs/{$id}");
-            $faq  = json_decode($resp->getBody()->getContents(), true)['data'] ?? [];
-        } catch (\Throwable $e) {
-            Log::error("Error fetching FAQ {$id}: ".$e->getMessage());
-            $faq = [];
-        }
+        $faq = Faq::findOrFail($id);
         return view('settings.faq-detail', compact('faq'));
     }
 
