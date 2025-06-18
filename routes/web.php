@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\CompanyController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -38,3 +39,10 @@ Route::get('/bookmarks', [FavoriteController::class, 'index'])
 Route::post('/jobs/{id}/apply', [App\Http\Controllers\JobController::class, 'apply'])
     ->name('jobs.apply');
 
+// عرض تفاصيل الشركة
+Route::get('/companies/{id}', [CompanyController::class, 'show'])
+    ->name('companies.show');
+
+// صفحة Take Action
+Route::get('/companies/{id}/action', [CompanyController::class, 'action'])
+    ->name('companies.action');
