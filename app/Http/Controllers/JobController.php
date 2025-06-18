@@ -15,70 +15,84 @@ class JobController extends Controller
         $this->client = new Client([
             // تأكد أن API_BASE_URL في .env ينتهي بشرطة مائلة /
             'base_uri' => config('services.api.base_uri'),
-            'headers'  => [
-                'Accept'        => 'application/json',
+            'headers' => [
+                'Accept' => 'application/json',
                 // اجعل session('api_token') موجودة أو ضع توكن ثابت للاختبار
                 'Authorization' => 'Bearer ' . session('api_token', 'YOUR_STATIC_TOKEN'),
             ],
-            'timeout'  => 5.0,
+            'timeout' => 5.0,
         ]);
     }
 
     public function index(Request $request)
     {
-        // تحضير المتغيرات الافتراضية
+        // 1. إعداد التواريخ الافتراضية
         $from = now()->subDays(30)->format('d-m-Y');
         $to   = now()->format('d-m-Y');
 
-        // بناء معطيات الطلب
-        $formParams = [
+        // 2. بناء معطيات الفلترة
+        $params = [
             'from_date' => $from,
             'to_date'   => $to,
         ];
 
+        // بحث بالكلمة المفتاحية → key = title
         if ($request->filled('search')) {
-            $formParams['keywords'] = $request->input('search');
-        }
-        if ($request->filled('country')) {
-            $formParams['country_of_residence'] = $request->input('country');
-        }
-        if ($request->filled('job_type_id')) {
-            $formParams['work_field_id'] = $request->input('job_type_id');
+            $params['title'] = $request->input('search');
         }
 
+        // فلتر بالدولة → key = country_of_residence
+        if ($request->filled('country_of_residence')) {
+            $params['country_of_residence'] = $request->input('country_of_residence');
+        }
+
+        // فلتر مجال العمل → key = work_field_id
+        if ($request->filled('work_field_id')) {
+            $params['work_field_id'] = $request->input('work_field_id');
+        }
+
+        // 3. استدعاء API الوظائف مع إرسال الفلترات كـ Query String
         try {
             $response = $this->client->request('GET', 'ar/api/job-seeker/all-jobs', [
-                'form_params' => $formParams,
-            ]);
+                'query' => $params,
+            ]);  // keys: from_date, to_date, country_of_residence, work_field_id, title :contentReference[oaicite:0]{index=0}
 
             $body = json_decode($response->getBody()->getContents(), true);
             $jobs = $body['data'] ?? [];
-
         } catch (\Throwable $e) {
-            // سجل الخطأ ومرّر مصفوفة فارغة للعرض
-            Log::error("Error fetching jobs: {$e->getMessage()}");
+            Log::error("Error fetching jobs: " . $e->getMessage());
             $jobs = [];
         }
 
-        // قوائم الفلاتر (مثال ثابت؛ يمكنك جلبهم من API إذا أحببت)
-        $countries = ['Palestine', 'Jordan', 'Egypt'];
-        $jobTypes  = [
-            '1' => 'Engineering',
-            '2' => 'Design',
-            '3' => 'Marketing',
+        // 4. تجهيز قوائم الفلاتر (يمكن جلبهم من API /all-companies أو ملف محلي)
+        $countries = [
+            ['id' => 1, 'name' => 'Palestine'],
+            ['id' => 2, 'name' => 'Jordan'],
+            ['id' => 3, 'name' => 'Egypt'],
         ];
 
-        return view('jobs.index', compact('jobs', 'countries', 'jobTypes'));
+        $jobTypes = [
+            ['id' => 1, 'title' => 'Engineering'],
+            ['id' => 2, 'title' => 'Design'],
+            ['id' => 3, 'title' => 'Marketing'],
+        ];
+
+        // 5. إرجاع الـ View مع البيانات
+        return view('jobs.index', [
+            'jobs'      => $jobs,
+            'countries' => $countries,
+            'jobTypes'  => $jobTypes,
+        ]);
     }
 
     public function show($id)
     {
         try {
             $response = $this->client->request('GET', "ar/api/job-seeker/job-details/{$id}");
-            $body     = json_decode($response->getBody()->getContents(), true);
-            $job      = $body['data'] ?? [];
+            $body = json_decode($response->getBody()->getContents(), true);
+            $job = $body['data'] ?? [];
         } catch (\Throwable $e) {
-            Log::error("Error fetching job details ({$id}): ".$e->getMessage());
+            Log::error("Error fetching job details ({$id}): " . $e->getMessage());
             $job = [];
         }
 

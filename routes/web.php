@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\FavoriteController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -23,3 +24,11 @@ Route::get('/jobs', [JobController::class, 'index']);
 
 Route::get('/jobs/{id}', [JobController::class, 'show'])
     ->name('jobs.show');
+
+// Toggle bookmark
+Route::post('/jobs/{id}/favorite', [FavoriteController::class, 'toggle'])
+    ->name('jobs.favorite.toggle');
+
+// قائمة الوظائف المحفوظة
+Route::get('/bookmarks', [FavoriteController::class, 'index'])
+    ->name('bookmarks.index');

@@ -7,7 +7,6 @@
 
     <!-- Tailwind via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-
     <!-- Font Awesome -->
     <link
         rel="stylesheet"
@@ -16,6 +15,10 @@
         crossorigin="anonymous"
         referrerpolicy="no-referrer"
     />
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
 <body class="flex h-screen bg-gray-100 overflow-hidden">
 
