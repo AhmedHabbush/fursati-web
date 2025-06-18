@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('applications', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')
+                ->constrained()
+                ->cascadeOnDelete();       // ربط بالمستخدم
+            $table->foreignId('job_id')
+                ->constrained('jobs')
+                ->cascadeOnDelete();       // ربط بالوظيفة
+            $table->string('video_path')->nullable(); // مسار ملف الفيديو المرفق
             $table->timestamps();
         });
     }

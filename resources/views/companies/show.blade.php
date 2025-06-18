@@ -1,64 +1,76 @@
 @extends('layouts.app')
 
+@section('title', $company->name)
+
 @section('content')
-    <div class="flex flex-col h-full">
-        {{-- Header --}}
-        <div class="bg-green-500 text-white p-4 flex items-center">
-            <a href="{{ url()->previous() }}" class="mr-4 text-xl"><i class="fas fa-arrow-right"></i></a>
-            <h2 class="text-lg font-semibold flex-1">Company Detail</h2>
+    <div class="p-4 max-w-4xl mx-auto space-y-6">
+
+        {{-- بانر الشركة --}}
+        @if($company->banner)
+            <img src="{{ $company->banner }}" alt="Banner" class="w-full h-48 object-cover rounded-lg">
+        @endif
+
+        {{-- شعار واسم الشركة --}}
+        <div class="flex items-center space-x-4 mt-4">
+            @if($company->logo)
+                <img src="{{ $company->logo }}" alt="Logo" class="w-16 h-16 object-contain">
+            @endif
+            <div>
+                <h1 class="text-2xl font-bold">{{ $company->name }}</h1>
+                <p class="text-gray-600">{{ $company->business_type }}</p>
+            </div>
         </div>
 
-        <div class="overflow-auto p-4 space-y-6">
-            {{-- Banner صورة (إن وجدت) --}}
-            <img src="{{ $company['banner'] ?? 'https://via.placeholder.com/400x150' }}"
-                 class="w-full h-40 object-cover rounded-lg" alt="Banner">
+        {{-- تفاصيل إضافية --}}
+        <div class="bg-white rounded-xl shadow p-4 space-y-2">
+            <p><span class="font-medium">عدد الموظفين:</span> {{ $company->employees }}</p>
+            <p><span class="font-medium">البلد:</span> {{ $company->country }}</p>
+            <p><span class="font-medium">الهاتف:</span> {{ $company->phone }}</p>
+        </div>
 
-            {{-- Logo & الاسم --}}
-            <div class="bg-white rounded-xl shadow p-4 flex items-center">
-                <img src="{{ $company['logo'] ?? 'https://via.placeholder.com/48' }}"
-                     class="w-12 h-12 rounded-full mr-3" alt="Logo">
-                <div>
-                    <div class="font-semibold">{{ $company['name'] ?? '' }}</div>
-                    <div class="text-sm text-gray-500">{{ $company['id'] ?? '' }}</div>
-                </div>
-            </div>
+        {{-- نبذة عن الشركة --}}
+        <div class="bg-white rounded-xl shadow p-4">
+            <h2 class="text-xl font-semibold mb-2">نبذة</h2>
+            <p class="text-gray-700">{{ $company->bio }}</p>
+        </div>
 
-            {{-- Details --}}
-            <div class="bg-white rounded-xl shadow p-4 space-y-2">
-                <h4 class="font-semibold">Details</h4>
-                <div class="text-sm text-gray-700 space-y-1">
-                    <div><span class="font-medium">Type of Business:</span> {{ $company['business_type'] ?? '' }}</div>
-                    <div><span class="font-medium">No. of Employees:</span> {{ $company['employees'] ?? '' }}</div>
-                    <div><span class="font-medium">Country:</span> {{ $company['country'] ?? '' }}</div>
-                </div>
-            </div>
+        {{-- قائمة الوظائف حديثة الإضافة --}}
+        <div class="bg-white rounded-xl shadow p-4">
+            <h2 class="text-xl font-semibold mb-4">الوظائف المتاحة</h2>
 
-            {{-- BIO --}}
-            <div class="bg-white rounded-xl shadow p-4 space-y-2">
-                <h4 class="font-semibold">BIO</h4>
-                <p class="text-gray-600 text-sm">{{ $company['bio'] ?? '' }}</p>
-            </div>
+            @if($company->jobs->count())
+                <ul class="space-y-3">
+                    @foreach($company->jobs as $job)
+                        <li class="border-b pb-3 last:border-none">
+                            <a href="{{ route('jobs.show', $job->id) }}"
+                               class="block hover:bg-gray-50 p-2 rounded">
+                                <div class="flex justify-between">
+                                    <span class="font-medium">{{ $job->title }}</span>
+                                    <span class="text-xs text-gray-500">{{ $job->salary }}</span>
+                                </div>
+                                <p class="text-sm text-gray-600">{{ \Illuminate\Support\Str::limit($job->description, 60) }}</p>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            @else
+                <p class="text-gray-600">لا توجد وظائف متاحة حالياً.</p>
+            @endif
+        </div>
 
-            {{-- Recent Jobs --}}
-            <div class="bg-white rounded-xl shadow p-4 space-y-2">
-                <h4 class="font-semibold">Recent Jobs</h4>
-                @forelse($jobs as $job)
-                    <a href="{{ route('jobs.show', $job['id']) }}"
-                       class="block p-3 border rounded hover:bg-gray-50">
-                        {{ $job['title'] ?? '' }}
-                    </a>
-                @empty
-                    <p class="text-gray-500">No recent jobs.</p>
-                @endforelse
-            </div>
-
-            {{-- زر Take Action --}}
-            <div class="py-4">
-                <a href="{{ route('companies.action', $company['id']) }}"
-                   class="block bg-green-500 text-white text-center py-3 rounded-full font-semibold">
-                    Take Action
+        {{-- زر Take Action --}}
+        <div class="flex space-x-2">
+            <a href="{{ route('companies.action', $company->id) }}"
+               class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded text-center">
+                Take Action
+            </a>
+            @if($company->phone)
+                <a href="tel:{{ $company->phone }}"
+                   class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded text-center">
+                    Call
                 </a>
-            </div>
+            @endif
         </div>
+
     </div>
 @endsection

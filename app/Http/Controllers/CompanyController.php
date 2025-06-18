@@ -24,28 +24,8 @@ class CompanyController extends Controller
     // عرض صفحة تفاصيل الشركة
     public function show($id)
     {
-        // 1) جلب كل الشركات ثم اختيار الشركة المطلوبة
-        try {
-            $resp = $this->client->request('GET', 'ar/api/all-companies');  // :contentReference[oaicite:0]{index=0}
-            $all  = json_decode($resp->getBody()->getContents(), true)['data'] ?? [];
-            $company = collect($all)->firstWhere('id', (int)$id) ?? [];
-        } catch (\Throwable $e) {
-            Log::error("Company fetch error: ".$e->getMessage());
-            $company = [];
-        }
-
-        // 2) جلب أحدث الوظائف لهذه الشركة
-        try {
-            $jobsResp = $this->client->request('GET', 'ar/api/job-seeker/all-jobs', [
-                'query' => ['business_man_id' => $id]
-            ]);  // مع استخدام مفتاح business_man_id :contentReference[oaicite:1]{index=1}
-            $jobs = json_decode($jobsResp->getBody()->getContents(), true)['data'] ?? [];
-        } catch (\Throwable $e) {
-            Log::error("Company jobs error: ".$e->getMessage());
-            $jobs = [];
-        }
-
-        return view('companies.show', compact('company','jobs'));
+        $company = \App\Models\Company::with('jobs')->findOrFail($id);
+        return view('companies.show', compact('company'));
     }
 
     // عرض صفحة Take Action

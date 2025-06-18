@@ -1,70 +1,102 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
+use App\Models\Job;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class JobController extends Controller
 {
-    protected $jobs = [
-        [
-            'id'=>1,
-            'title'=>'Web and Mobile Development',
-            'job_time'=>'30 min',
-            'company'=>[
-                'id'=>1012416,
-                'name'=>'PURE for IT Solutions',
-                'logo'=>'https://via.placeholder.com/24',
-                'views'=>21
-            ],
-            'job_type'=>['title'=>'Engineering'],
-            'salary'=>'100$ - 250$',
-            'experience'=>'3 Years',
-            'remaining_days'=>'3 days rem.',
-            'description'=>'Lorem ipsum dolor sit amet…',
-            'skills'=>['Java','JavaScript','Bootstrap'],
-            'is_favorite'=>false,
-            'business_man_id'=>1,
-        ],
-        // أضف المزيد حسب الحاجة…
-    ];
-
-    // GET /ar/api/job-seeker/all-jobs
-    public function index(Request $req)
+    /**
+     * GET /api/ar/api/job-seeker/all-jobs
+     */
+    public function index(Request $request)
     {
-        // هنا يمكنك تطبيق الفلاتر من $req->all()
-        return response()->json(['data'=>$this->jobs]);
+        // 1) بناء query مع الفلاتر
+        $q = Job::with('company');
+
+        if ($request->filled('title')) {
+            $q->where('title', 'like', "%{$request->title}%");
+        }
+        if ($request->filled('country_id')) {
+            $q->where('country_id', $request->country_id);
+        }
+        if ($request->filled('job_type_id')) {
+            $q->where('job_type_id', $request->job_type_id);
+        }
+
+        // 2) جلب النتائج مع pagination
+        $jobs = $q->paginate(10);
+
+        return response()->json(['data' => $jobs]);
     }
 
-    // GET /ar/api/job-seeker/job-details/{id}
+    /**
+     * GET /api/ar/api/job-seeker/job-details/{id}
+     */
     public function show($id)
     {
-        $job = collect($this->jobs)->firstWhere('id',(int)$id);
-        if (! $job) {
-            return response()->json(['message'=>'Not Found'],404);
+        // جلب الوظيفة مع الشركة، والمستخدمين الذين حفظوها، والمتقدّمين
+        $job = Job::with('company', 'favoritedBy', 'applicants')->find($id);
+
+        if (!$job) {
+            return response()->json(['message' => 'Not Found'], 404);
         }
-        return response()->json(['data'=>$job]);
+
+        return response()->json(['data' => $job]);
     }
 
-    // POST /ar/api/job-seeker/jobs/{id}/mark-favorite
+    /**
+     * POST /api/ar/api/job-seeker/jobs/{id}/mark-favorite
+     */
     public function toggleFavorite($id)
     {
-        // في الواقع: يجب تحديث في الـ DB. هنا نُعيد حالة مُقلوبة.
-        return response()->json(['message'=>'Toggled favorite for job '.$id]);
+        $user = Auth::user(); // تأكد أنك تستخدم توكن API مع Sanctum أو Passport
+        $job = Job::findOrFail($id);
+
+        if ($user->favoriteJobs()->where('job_id', $id)->exists()) {
+            $user->favoriteJobs()->detach($id);
+            $message = 'Removed from favorites';
+        } else {
+            $user->favoriteJobs()->attach($id);
+            $message = 'Added to favorites';
+        }
+
+        return response()->json(['message' => $message]);
     }
 
-    // GET /ar/api/job-seeker/favorite-jobs
+    /**
+     * GET /api/ar/api/job-seeker/favorite-jobs
+     */
     public function favoriteJobs()
     {
-        // في الواقع: جلب من DB؛ هنا نعيد الثابتة.
-        $favorites = array_filter($this->jobs, fn($j)=> $j['is_favorite']);
-        return response()->json(['data'=>array_values($favorites)]);
+        $user = Auth::user();
+        $jobs = $user->favoriteJobs()->with('company')->get();
+        return response()->json(['data' => $jobs]);
     }
 
-    // POST /ar/api/job-seeker/jobs/applied/{id}
-    public function apply(Request $req, $id)
+    /**
+     * POST /api/ar/api/job-seeker/jobs/applied/{id}
+     */
+    public function apply(Request $request, $id)
     {
-        // هنا تعالج رفع الفيديو إن وُجد: $req->file('vedio')
-        return response()->json(['message'=>'Applied to job '.$id]);
+        $user = Auth::user();
+        $job = Job::findOrFail($id);
+
+        // 1) حمّل الفيديو لو وُجد
+        $path = null;
+        if ($request->hasFile('video')) {
+            $path = $request->file('video')->store('applications', 'public');
+        }
+
+        // 2) سجّل التقديم
+        $user->appliedJobs()->syncWithoutDetaching([
+            $id => ['video_path' => $path]
+        ]);
+
+        return response()->json(['message' => 'Applied successfully']);
     }
 }

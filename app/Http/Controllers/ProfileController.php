@@ -2,61 +2,59 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProfileUpdateRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use GuzzleHttp\Client;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    private Client $client;
-
-    public function __construct()
+    /**
+     * Display the user's profile form.
+     */
+    public function edit(Request $request): View
     {
-        // تأكد من أنك تحفظ توكن API في session('api_token')
-        $this->middleware(function($request, $next) {
-            if (!session('api_token')) {
-                // عدّلنا هنا
-                return redirect()->route('login');
-            }
-            return $next($request);
-        });
-
-        $this->client = new Client([
-            'base_uri' => config('services.api.base_uri'),
-            'headers'  => [
-                'Accept'        => 'application/json',
-                'Authorization' => 'Bearer ' . Session::get('api_token'),
-            ],
-            'timeout'  => 5.0,
+        return view('profile.edit', [
+            'user' => $request->user(),
         ]);
     }
 
     /**
-     * عرض بيانات المستخدم
+     * Update the user's profile information.
      */
-    public function show()
+    public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        try {
-            // إذا كان هناك endpoint API للمستخدم، استدعِه هنا
-            $response = $this->client->request('GET', 'ar/api/job-seeker/profile');
-            $body     = json_decode($response->getBody()->getContents(), true);
-            $user     = $body['data'] ?? [];
-        } catch (\Throwable $e) {
-            Log::error("Error fetching profile: ".$e->getMessage());
-            $user = [];
+        $request->user()->fill($request->validated());
+
+        if ($request->user()->isDirty('email')) {
+            $request->user()->email_verified_at = null;
         }
 
-        return view('profile.show', compact('user'));
+        $request->user()->save();
+
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
     /**
-     * تسجيل الخروج (مسح التوكن من الجلسة)
+     * Delete the user's account.
      */
-    public function logout(Request $request)
+    public function destroy(Request $request): RedirectResponse
     {
-        Session::forget('api_token');
-        // يمكنك أيضاً مسح أي بيانات أخرى للجلسة هنا
-        return redirect()->route('jobs.index');
+        $request->validateWithBag('userDeletion', [
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = $request->user();
+
+        Auth::logout();
+
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return Redirect::to('/');
     }
 }

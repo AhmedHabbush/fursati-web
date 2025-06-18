@@ -7,99 +7,59 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AuthController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
+| Here is where you can register web routes for your application.
 |
 */
 
-//Route::get('/', function () {
-//    return view('welcome');
-//});
-// عرض نموذج تسجيل الدخول
-Route::get('/login', [AuthController::class, 'showLoginForm'])
-    ->name('login');
-// معالجة تسجيل الدخول
+// Authentication (login/register)
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
-
-// عرض نموذج التسجيل
-Route::get('/register', [AuthController::class, 'showRegisterForm'])
-    ->name('register');
-// معالجة التسجيل
+Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
 
-Route::get('/', [JobController::class, 'index'])
-    ->name('jobs.index');
-//----------------------------------------
-Route::get('/jobs', [JobController::class, 'index']);
+// Public Routes
+// Home → jobs listing
+Route::get('/', [JobController::class, 'index'])->name('jobs.index');
 
-Route::get('/jobs/{id}', [JobController::class, 'show'])
-    ->name('jobs.show');
+Route::prefix('jobs')->group(function () {
+    // list & detail share the same controller
+    Route::get('/', [JobController::class, 'index']);
+    Route::get('{id}', [JobController::class, 'show'])->name('jobs.show');
+    Route::post('{id}/apply', [JobController::class, 'apply'])->name('jobs.apply');
+});
 
-// Toggle bookmark
-Route::post('/jobs/{id}/favorite', [FavoriteController::class, 'toggle'])
-    ->name('jobs.favorite.toggle');
+Route::prefix('companies')->group(function () {
+    Route::get('{id}', [CompanyController::class, 'show'])->name('companies.show');
+    Route::get('{id}/action', [CompanyController::class, 'action'])->name('companies.action');
+});
 
-// قائمة الوظائف المحفوظة
-Route::get('/bookmarks', [FavoriteController::class, 'index'])
-    ->name('bookmarks.index');
+Route::prefix('settings')->group(function () {
+    Route::get('/', [SettingsController::class, 'index'])->name('settings.index');
+    Route::get('faqs', [SettingsController::class, 'faqs'])->name('settings.faqs');
+    Route::get('faqs/{id}', [SettingsController::class, 'faqDetail'])->name('settings.faq.detail');
+    Route::get('policies', [SettingsController::class, 'policies'])->name('settings.policies');
+    Route::get('help', [SettingsController::class, 'help'])->name('settings.help');
+    Route::post('help', [SettingsController::class, 'submitHelp'])->name('settings.help.submit');
+    Route::get('language', [SettingsController::class, 'language'])->name('settings.language');
+    Route::post('language', [SettingsController::class, 'setLanguage'])->name('settings.language.set');
+    Route::get('notifications', [SettingsController::class, 'notifications'])->name('settings.notifications');
+    Route::post('notifications', [SettingsController::class, 'setNotifications'])->name('settings.notifications.set');
+});
 
-// فتح نموذج التقديم (في هذه الحالة ليس مساراً مباشراً بل عرض Modal عبر JS)
-// لكن نحتاج مسار استقبال الطلب الفعلي:
-Route::post('/jobs/{id}/apply', [App\Http\Controllers\JobController::class, 'apply'])
-    ->name('jobs.apply');
+// Protected Routes (require authentication)
+Route::middleware('auth')->group(function () {
 
-// عرض تفاصيل الشركة
-Route::get('/companies/{id}', [CompanyController::class, 'show'])
-    ->name('companies.show');
+    // Favorites / Bookmarks
+    Route::get('/bookmarks', [FavoriteController::class, 'index'])->name('bookmarks.index');
+    Route::post('jobs/{id}/favorite', [FavoriteController::class, 'toggle'])->name('jobs.favorite.toggle');
 
-// صفحة Take Action
-Route::get('/companies/{id}/action', [CompanyController::class, 'action'])
-    ->name('companies.action');
-
-Route::get('/settings', [SettingsController::class, 'index'])
-    ->name('settings.index');
-// قائمة الأسئلة المتكررة
-Route::get('/settings/faqs', [SettingsController::class, 'faqs'])
-    ->name('settings.faqs');
-
-// تفاصيل سؤال محدد
-Route::get('/settings/faqs/{id}', [SettingsController::class, 'faqDetail'])
-    ->name('settings.faq.detail');
-
-// صفحة السياسات (Privacy Policy)
-Route::get('/settings/policies', [SettingsController::class, 'policies'])
-    ->name('settings.policies');
-
-// عرض نموذج Help & Feedback
-Route::get('/settings/help', [SettingsController::class, 'help'])
-    ->name('settings.help');
-
-// معالجة إرسال النموذج
-Route::post('/settings/help', [SettingsController::class, 'submitHelp'])
-    ->name('settings.help.submit');
-
-// عرض اختيار اللغة
-Route::get('/settings/language', [SettingsController::class, 'language'])
-    ->name('settings.language');
-Route::post('/settings/language', [SettingsController::class, 'setLanguage'])
-    ->name('settings.language.set');
-
-// عرض إعدادات التنبيهات
-Route::get('/settings/notifications', [SettingsController::class, 'notifications'])
-    ->name('settings.notifications');
-Route::post('/settings/notifications', [SettingsController::class, 'setNotifications'])
-    ->name('settings.notifications.set');
-
-// صفحة الملف الشخصي
-Route::get('/profile', [ProfileController::class, 'show'])
-    ->name('profile.show');
-
-// عملية تسجيل الخروج
-Route::post('/logout', [ProfileController::class, 'logout'])
-    ->name('logout');
+    // Profile & Logout
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});

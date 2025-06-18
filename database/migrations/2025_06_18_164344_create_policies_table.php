@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('policies', function (Blueprint $table) {
             $table->id();
+            $table->string('title');    // عنوان السياسة
+            $table->text('content');    // نصّ السياسة
             $table->timestamps();
         });
     }

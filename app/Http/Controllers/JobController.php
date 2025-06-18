@@ -3,103 +3,52 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-
+use App\Models\Job;
 class JobController extends Controller
 {
-    private Client $client;
-
-    public function __construct()
-    {
-        $this->client = new Client([
-            // تأكد أن API_BASE_URL في .env ينتهي بشرطة مائلة /
-            'base_uri' => config('services.api.base_uri'),
-            'headers' => [
-                'Accept' => 'application/json',
-                // اجعل session('api_token') موجودة أو ضع توكن ثابت للاختبار
-                'Authorization' => 'Bearer ' . session('api_token', 'YOUR_STATIC_TOKEN'),
-            ],
-            'timeout' => 5.0,
-        ]);
-    }
-
     public function index(Request $request)
     {
-        // 1. إعداد التواريخ الافتراضية
-        $from = now()->subDays(30)->format('d-m-Y');
-        $to   = now()->format('d-m-Y');
+        // 1) بناء query مع eager‐loading لمعلومات الشركة
+        $q = Job::with('company');
 
-        // 2. بناء معطيات الفلترة
-        $params = [
-            'from_date' => $from,
-            'to_date'   => $to,
-        ];
-
-        // بحث بالكلمة المفتاحية → key = title
+        // 2) تطبيق الفلاتر
         if ($request->filled('search')) {
-            $params['title'] = $request->input('search');
+            $q->where('title', 'like', "%{$request->search}%");
+        }
+        if ($request->filled('country_id')) {
+            $q->where('country_id', $request->country_id);
+        }
+        if ($request->filled('job_type_id')) {
+            $q->where('job_type_id', $request->job_type_id);
         }
 
-        // فلتر بالدولة → key = country_of_residence
-        if ($request->filled('country_of_residence')) {
-            $params['country_of_residence'] = $request->input('country_of_residence');
-        }
+        // 3) جلب النتائج مع pagination
+        $jobs = $q->paginate(10);
 
-        // فلتر مجال العمل → key = work_field_id
-        if ($request->filled('work_field_id')) {
-            $params['work_field_id'] = $request->input('work_field_id');
-        }
-
-        // 3. استدعاء API الوظائف مع إرسال الفلترات كـ Query String
-        try {
-            $response = $this->client->request('GET', 'ar/api/job-seeker/all-jobs', [
-                'query' => $params,
-            ]);  // keys: from_date, to_date, country_of_residence, work_field_id, title :contentReference[oaicite:0]{index=0}
-
-            $body = json_decode($response->getBody()->getContents(), true);
-            $jobs = $body['data'] ?? [];
-        } catch (\Throwable $e) {
-            Log::error("Error fetching jobs: " . $e->getMessage());
-            $jobs = [];
-        }
-
-        // 4. تجهيز قوائم الفلاتر (يمكن جلبهم من API /all-companies أو ملف محلي)
+        // 4) قائمة البلدان وأنواع الوظائف (يمكن جلبها من DB أو تركها ثابتة)
         $countries = [
-            ['id' => 1, 'name' => 'Palestine'],
-            ['id' => 2, 'name' => 'Jordan'],
-            ['id' => 3, 'name' => 'Egypt'],
+            ['id'=>1,'name'=>'Palestine'],
+            ['id'=>2,'name'=>'Jordan'],
+            ['id'=>3,'name'=>'Egypt'],
         ];
-
         $jobTypes = [
-            ['id' => 1, 'title' => 'Engineering'],
-            ['id' => 2, 'title' => 'Design'],
-            ['id' => 3, 'title' => 'Marketing'],
+            ['id'=>1,'title'=>'Engineering'],
+            ['id'=>2,'title'=>'Design'],
+            ['id'=>3,'title'=>'Marketing'],
         ];
 
-        // 5. إرجاع الـ View مع البيانات
-        return view('jobs.index', [
-            'jobs'      => $jobs,
-            'countries' => $countries,
-            'jobTypes'  => $jobTypes,
-        ]);
+        // 5) تمرير البيانات إلى الـ view
+        return view('jobs.index', compact('jobs','countries','jobTypes'));
     }
-
     public function show($id)
     {
-        try {
-            $response = $this->client->request('GET', "ar/api/job-seeker/job-details/{$id}");
-            $body = json_decode($response->getBody()->getContents(), true);
-            $job = $body['data'] ?? [];
-        } catch (\Throwable $e) {
-            Log::error("Error fetching job details ({$id}): " . $e->getMessage());
-            $job = [];
-        }
+        // جلب الوظيفة مع الشركة والمفضّلين والمتقدّمين (إذا أردت)
+        $job = Job::with('company','favoritedBy','applicants')->findOrFail($id);
 
         return view('jobs.show', compact('job'));
     }
-
     /**
      * إرسال طلب التقديم على الوظيفة
      */

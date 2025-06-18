@@ -1,8 +1,11 @@
 <?php
+
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -11,24 +14,56 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function login(Request $r)
-    {
-        // هنا تبني المنطق الفعلي للمصادقة عبر API…
-        // لنفترض أنّ المستخدم يُدخل توكن الـ API مباشرة:
-        $r->validate(['api_token' => 'required|string']);
-        Session::put('api_token', $r->input('api_token'));
-        return redirect()->intended(route('profile.show'));
-    }
-
     public function showRegisterForm()
     {
         return view('auth.register');
     }
 
-    public function register(Request $r)
+    public function login(Request $request)
     {
-        // لو عندك API تسجيل، نفّذه هنا ثم خزّن التوكن
-        // للآن نجعلها dummy:
-        return redirect()->route('login');
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+        ]);
+
+        $remember = $request->boolean('remember');
+        if (Auth::attempt($credentials, $remember)) {
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('jobs.index'));
+        }
+
+        return back()
+            ->withErrors(['email' => __('The provided credentials do not match our records.')])
+            ->withInput();
+    }
+
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+        ]);
+
+        Auth::login($user);
+
+        return redirect()->route('jobs.index');
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect(route('login'));
     }
 }
