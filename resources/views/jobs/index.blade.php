@@ -83,13 +83,20 @@
                             {{ \Illuminate\Support\Str::limit($job['description'] ?? '', 80) }}
                         </p>
                     </div>
-                    <div class="flex justify-end space-x-4 mt-4 text-gray-400 group-hover:text-gray-600 transition">
-                        <button>
-                            <i class="fas fa-share-alt text-lg px-2"></i>
+                    {{-- جهة اليمين: أزرار المشاركة والحفظ --}}
+                    <div class="flex flex-col items-center justify-between ml-4 space-y-2">
+                        {{-- زر المشاركة --}}
+                        <button type="button">
+                            <i class="fas fa-share-alt text-gray-400 text-xl"></i>
                         </button>
-                        <button>
-                            <i class="fas fa-bookmark text-lg px-2"></i>
-                        </button>
+
+                        {{-- زر الحفظ / إلغاء الحفظ --}}
+                        <form method="POST" action="{{ route('jobs.favorite.toggle', $job['id']) }}">
+                            @csrf
+                            <button type="submit" class="focus:outline-none">
+                                <i class="{{ ($job['is_favorite'] ?? false) ? 'fas' : 'far' }} fa-bookmark text-xl text-gray-600"></i>
+                            </button>
+                        </form>
                     </div>
                 </div>
             @empty
