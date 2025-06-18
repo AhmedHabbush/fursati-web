@@ -5,6 +5,7 @@ use App\Http\Controllers\JobController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,3 +69,23 @@ Route::get('/settings/help', [SettingsController::class, 'help'])
 // معالجة إرسال النموذج
 Route::post('/settings/help', [SettingsController::class, 'submitHelp'])
     ->name('settings.help.submit');
+
+// عرض اختيار اللغة
+Route::get('/settings/language', [SettingsController::class, 'language'])
+    ->name('settings.language');
+Route::post('/settings/language', [SettingsController::class, 'setLanguage'])
+    ->name('settings.language.set');
+
+// عرض إعدادات التنبيهات
+Route::get('/settings/notifications', [SettingsController::class, 'notifications'])
+    ->name('settings.notifications');
+Route::post('/settings/notifications', [SettingsController::class, 'setNotifications'])
+    ->name('settings.notifications.set');
+
+// صفحة الملف الشخصي
+Route::get('/profile', [ProfileController::class, 'show'])
+    ->name('profile.show');
+
+// عملية تسجيل الخروج
+Route::post('/logout', [ProfileController::class, 'logout'])
+    ->name('logout');

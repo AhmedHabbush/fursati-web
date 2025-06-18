@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserPreference;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 
@@ -97,5 +99,61 @@ class SettingsController extends Controller
 
         // 4. رجع للمستخدم برسالة نجاح
         return back()->with('success', 'شكرًا لرسالتك! سنعاود الاتصال بك قريبًا.');
+    }
+    public function language()
+    {
+        $pref = Auth::user()->preference
+            ?? new UserPreference(['language' => app()->getLocale()]);
+        return view('settings.language', [
+            'current' => $pref->language,
+            'options' => ['ar' => 'العربية', 'en' => 'English'],
+        ]);
+    }
+
+    // 2. حفظ اللغة المختارة
+    public function setLanguage(Request $request)
+    {
+        $data = $request->validate([
+            'language' => 'required|in:ar,en',
+        ]);
+
+        $user = Auth::user();
+        $pref = $user->preference
+            ? tap($user->preference)->update($data)
+            : $user->preference()->create($data);
+
+        app()->setLocale($data['language']);
+        session(['locale' => $data['language']]);
+
+        return redirect()->route('settings.language')
+            ->with('success', 'تم تغيير اللغة إلى '.$pref->language);
+    }
+
+    // 3. عرض صفحة التنبيهات
+    public function notifications()
+    {
+        $pref = Auth::user()->preference
+            ?? new UserPreference();
+        return view('settings.notifications', [
+            'jobAlerts'     => $pref->notify_job_alerts,
+            'messageAlerts' => $pref->notify_message_alerts,
+        ]);
+    }
+
+    // 4. حفظ إعدادات التنبيهات
+    public function setNotifications(Request $request)
+    {
+        $data = $request->validate([
+            'notify_job_alerts'     => 'boolean',
+            'notify_message_alerts' => 'boolean',
+        ]);
+
+        $user = Auth::user();
+        $pref = $user->preference
+            ? tap($user->preference)->update($data)
+            : $user->preference()->create($data);
+
+        return redirect()->route('settings.notifications')
+            ->with('success', 'تم تحديث إعدادات التنبيهات');
     }
 }
