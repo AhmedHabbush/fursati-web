@@ -23,33 +23,32 @@
 <body class="flex h-screen bg-gray-100 overflow-hidden">
 
 <!-- Sidebar -->
-<aside class="w-64 bg-white border-r border-gray-200 overflow-auto p-6">
-    <div class="p-6">
-        <h1 class="text-2xl font-bold mb-8">Fursati</h1>
-        <nav class="space-y-4">
-            <a href="#" class="flex items-center text-gray-700 hover:text-blue-600 transition">
-                <i class="fas fa-briefcase w-6"></i>
-                <span class="mr-3">وظائف</span>
-            </a>
-            <a href="#" class="flex items-center text-gray-700 hover:text-blue-600 transition">
-                <i class="fas fa-bookmark w-6"></i>
-                <span class="mr-3">المحفوظات</span>
-            </a>
-            <a href="#" class="flex items-center text-gray-700 hover:text-blue-600 transition">
-                <i class="fas fa-cog w-6"></i>
-                <span class="mr-3">الإعدادات</span>
-            </a>
-            <a href="#" class="flex items-center text-gray-700 hover:text-blue-600 transition">
-                <i class="fas fa-user-circle w-6"></i>
-                <span class="mr-3">الملف</span>
-            </a>
-        </nav>
-    </div>
+<aside class="w-64 bg-white border-r border-gray-200 overflow-auto p-6 hidden lg:block">
+    <h1 class="text-2xl font-bold mb-8">Fursati</h1>
+    <nav class="space-y-4">
+        <a href="{{ route('jobs.index') }}" class="flex items-center text-gray-700 hover:text-blue-600 transition">
+            <i class="fas fa-briefcase w-6"></i>
+            <span class="mr-3">وظائف</span>
+        </a>
+        <a href="{{ route('bookmarks.index') }}" class="flex items-center text-gray-700 hover:text-blue-600 transition">
+            <i class="fas fa-bookmark w-6"></i>
+            <span class="mr-3">المحفوظات</span>
+        </a>
+        <a href="{{ route('settings.index') }}" class="flex items-center text-gray-700 hover:text-blue-600 transition">
+            <i class="fas fa-cog w-6"></i>
+            <span class="mr-3">الإعدادات</span>
+        </a>
+        <a href="{{ route('profile.show') }}" class="flex items-center text-gray-700 hover:text-blue-600 transition">
+            <i class="fas fa-user-circle w-6"></i>
+            <span class="mr-3">الملف</span>
+        </a>
+    </nav>
 </aside>
 
 <!-- Main content -->
 <main class="flex-1 overflow-auto p-8">
     @yield('content')
 </main>
+
 </body>
 </html>

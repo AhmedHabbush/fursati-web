@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Log;
 
 class SettingsController extends Controller
 {
+    public function index()
+    {
+        return view('settings.index');
+    }
     private Client $client;
 
     public function __construct()
@@ -102,31 +106,31 @@ class SettingsController extends Controller
     }
     public function language()
     {
-        $pref = Auth::user()->preference
-            ?? new UserPreference(['language' => app()->getLocale()]);
-        return view('settings.language', [
-            'current' => $pref->language,
-            'options' => ['ar' => 'العربية', 'en' => 'English'],
-        ]);
+        // خذ اللغة الحالية من الجلسة أو من إعدادات التطبيق
+        $current = session('locale', app()->getLocale());
+
+        // خيارات اللغة
+        $options = [
+            'ar' => 'العربية',
+            'en' => 'English',
+        ];
+
+        return view('settings.language', compact('current', 'options'));
     }
 
-    // 2. حفظ اللغة المختارة
+    // حفظ اللغة المختارة
     public function setLanguage(Request $request)
     {
         $data = $request->validate([
             'language' => 'required|in:ar,en',
         ]);
 
-        $user = Auth::user();
-        $pref = $user->preference
-            ? tap($user->preference)->update($data)
-            : $user->preference()->create($data);
-
-        app()->setLocale($data['language']);
+        // خزّن الاختيار في الجلسة
         session(['locale' => $data['language']]);
 
-        return redirect()->route('settings.language')
-            ->with('success', 'تم تغيير اللغة إلى '.$pref->language);
+        return redirect()
+            ->route('settings.language')
+            ->with('success', 'تم تغيير اللغة إلى ' . ($data['language'] === 'ar' ? 'العربية' : 'English'));
     }
 
     // 3. عرض صفحة التنبيهات

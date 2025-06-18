@@ -6,7 +6,7 @@ use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ProfileController;
-
+use App\Http\Controllers\AuthController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -21,6 +21,18 @@ use App\Http\Controllers\ProfileController;
 //Route::get('/', function () {
 //    return view('welcome');
 //});
+// عرض نموذج تسجيل الدخول
+Route::get('/login', [AuthController::class, 'showLoginForm'])
+    ->name('login');
+// معالجة تسجيل الدخول
+Route::post('/login', [AuthController::class, 'login']);
+
+// عرض نموذج التسجيل
+Route::get('/register', [AuthController::class, 'showRegisterForm'])
+    ->name('register');
+// معالجة التسجيل
+Route::post('/register', [AuthController::class, 'register']);
+
 Route::get('/', [JobController::class, 'index'])
     ->name('jobs.index');
 //----------------------------------------
@@ -50,6 +62,8 @@ Route::get('/companies/{id}', [CompanyController::class, 'show'])
 Route::get('/companies/{id}/action', [CompanyController::class, 'action'])
     ->name('companies.action');
 
+Route::get('/settings', [SettingsController::class, 'index'])
+    ->name('settings.index');
 // قائمة الأسئلة المتكررة
 Route::get('/settings/faqs', [SettingsController::class, 'faqs'])
     ->name('settings.faqs');

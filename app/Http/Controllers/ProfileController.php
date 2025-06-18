@@ -15,8 +15,9 @@ class ProfileController extends Controller
     {
         // تأكد من أنك تحفظ توكن API في session('api_token')
         $this->middleware(function($request, $next) {
-            if (! Session::has('api_token')) {
-                return redirect()->route('settings.help'); // أو إلى صفحة تسجيل الدخول
+            if (!session('api_token')) {
+                // عدّلنا هنا
+                return redirect()->route('login');
             }
             return $next($request);
         });
