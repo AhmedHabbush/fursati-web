@@ -6,6 +6,7 @@ use App\Models\Job;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class JobController extends Controller
@@ -83,20 +84,31 @@ class JobController extends Controller
      */
     public function apply(Request $request, $id)
     {
-        $user = Auth::user();
-        $job = Job::findOrFail($id);
-
-        // 1) حمّل الفيديو لو وُجد
-        $path = null;
-        if ($request->hasFile('video')) {
-            $path = $request->file('video')->store('applications', 'public');
+        // 1) جلب المستخدم من التوكن
+        $user = $request->user();
+        if (! $user) {
+            return response()->json([
+                'message' => 'Unauthenticated. You must login first.'
+            ], 401);
         }
 
-        // 2) سجّل التقديم
-        $user->appliedJobs()->syncWithoutDetaching([
-            $id => ['video_path' => $path]
-        ]);
+        // 2) تأكّد من وجود الوظيفة
+        $job = Job::findOrFail($id);
 
-        return response()->json(['message' => 'Applied successfully']);
+        // 3) اربط في جدول applications (many-to-many)
+        try {
+            $user->appliedJobs()       // علاقة many-to-many في نموذج User
+            ->syncWithoutDetaching($job->id);
+
+            return response()->json([
+                'message' => 'Applied successfully.',
+            ], 200);
+
+        } catch (\Throwable $e) {
+            Log::error("Error applying job {$id}: ".$e->getMessage());
+            return response()->json([
+                'message' => 'Server error while applying.',
+            ], 500);
+        }
     }
 }

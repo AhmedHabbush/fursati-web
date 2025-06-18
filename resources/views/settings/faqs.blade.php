@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'FAQs')
+
 @section('content')
     <section class="p-4 space-y-4">
         <h1 class="text-2xl font-bold">FAQs</h1>

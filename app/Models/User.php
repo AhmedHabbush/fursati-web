@@ -63,7 +63,11 @@ class User extends Authenticatable
      */
     public function appliedJobs(): BelongsToMany
     {
-        return $this->belongsToMany(Job::class, 'applications')
-            ->withPivot('video_path','created_at','updated_at');
+        return $this->belongsToMany(
+            Job::class,
+            'applications',      // اسم جدول الربط
+            'user_id',
+            'job_id'
+        )->withTimestamps();
     }
 }
