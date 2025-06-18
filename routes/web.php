@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\JobController;
+use App\Http\Controllers\FavoriteController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -13,6 +14,21 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+//Route::get('/', function () {
+//    return view('welcome');
+//});
+Route::get('/', [JobController::class, 'index'])
+    ->name('jobs.index');
+//----------------------------------------
+Route::get('/jobs', [JobController::class, 'index']);
+
+Route::get('/jobs/{id}', [JobController::class, 'show'])
+    ->name('jobs.show');
+
+// Toggle bookmark
+Route::post('/jobs/{id}/favorite', [FavoriteController::class, 'toggle'])
+    ->name('jobs.favorite.toggle');
+
+// قائمة الوظائف المحفوظة
+Route::get('/bookmarks', [FavoriteController::class, 'index'])
+    ->name('bookmarks.index');
