@@ -5,6 +5,7 @@ use App\Http\Controllers\JobController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\SettingsController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -59,3 +60,11 @@ Route::get('/settings/faqs/{id}', [SettingsController::class, 'faqDetail'])
 // صفحة السياسات (Privacy Policy)
 Route::get('/settings/policies', [SettingsController::class, 'policies'])
     ->name('settings.policies');
+
+// عرض نموذج Help & Feedback
+Route::get('/settings/help', [SettingsController::class, 'help'])
+    ->name('settings.help');
+
+// معالجة إرسال النموذج
+Route::post('/settings/help', [SettingsController::class, 'submitHelp'])
+    ->name('settings.help.submit');

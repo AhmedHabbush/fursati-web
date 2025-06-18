@@ -61,4 +61,41 @@ class SettingsController extends Controller
         }
         return view('settings.policies', compact('policies'));
     }
+    /**
+     * عرض نموذج Help & Feedback
+     */
+    public function help()
+    {
+        return view('settings.help');
+    }
+
+    /**
+     * معالجة إرسال Help & Feedback
+     */
+    public function submitHelp(Request $request)
+    {
+        // 1. تحقق من المدخلات
+        $data = $request->validate([
+            'name'        => 'required|string|max:100',
+            'email'       => 'required|email|max:150',
+            'subject'     => 'required|string|max:150',
+            'message'     => 'required|string',
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'file|max:5120', // 5MB لكل ملف
+        ]);
+
+        // 2. احفظ المرفقات إن وُجدت
+        $savedFiles = [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $savedFiles[] = $file->store('help-feedback', 'public');
+            }
+        }
+
+        // 3. (اختياري) يمكنك هنا إرسال رسالة بريد أو تخزين البيانات في DB
+        // مثلاً: Mail::to(config('mail.support'))->send(new HelpFeedbackMail($data, $savedFiles));
+
+        // 4. رجع للمستخدم برسالة نجاح
+        return back()->with('success', 'شكرًا لرسالتك! سنعاود الاتصال بك قريبًا.');
+    }
 }
