@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -41,4 +41,29 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    public function preference()
+    {
+        return $this->hasOne(UserPreference::class);
+    }
+    /**
+     * الوظائف التي حفظها المستخدم
+     */
+    public function favoriteJobs(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Job::class,
+            'favorites',
+            'user_id',
+            'job_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * الوظائف التي قدم لها المستخدم
+     */
+    public function appliedJobs(): BelongsToMany
+    {
+        return $this->belongsToMany(Job::class, 'applications')
+            ->withPivot('video_path','created_at','updated_at');
+    }
 }
