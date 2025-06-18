@@ -105,15 +105,3 @@
 ├── package.json
 └── README.md                    # هذا الملف
 ```
-
-## المساهمة
-
-1. افتح Issue أو Feature Request
-2. أنشئ فرع جديد من `main`: `git checkout -b feature/your-feature`
-3. نفّذ التعديلات وارتكِب Commit مع رسائل واضحة
-4. ادفع فرعك إلى الريموت: `git push origin feature/your-feature`
-5. افتح Pull Request للمراجعة والدمج
-
-## الترخيص
-
-هذا المشروع مجاني للاستخدام ضمن متطلبات مساق التدريب الميداني.
