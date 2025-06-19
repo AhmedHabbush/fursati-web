@@ -34,7 +34,7 @@ class AuthController extends Controller
         ], 200);
     }
 
-    // (اختياري) تسجيل خروج: يحذف التوكن الحالي
+    // تسجيل خروج: يحذف التوكن الحالي
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
