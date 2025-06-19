@@ -19,30 +19,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1) مستخدمون تجريبيون
         User::factory(10)->create();
 
-        // 2) شركات ووظائفها
         Company::factory(5)
             ->create()
             ->each(function ($company) {
-                // لكل شركة 3-8 وظائف
                 Job::factory(rand(3, 8))
                     ->for($company)
                     ->create();
             });
 
-        // 3) FAQs و Policies
         Faq::factory(10)->create();
         Policy::factory(5)->create();
-        // 4) seeding Favorites بشكل آمن
         User::all()->each(function ($user) {
-            // نأخذ عدد عشوائي من الوظائف (مثلاً 1 إلى 5)
             $jobIds = Job::inRandomOrder()
                 ->take(rand(1, 5))
                 ->pluck('id');
 
-            // ننشئ العلاقة لكل job_id موجود
             foreach ($jobIds as $jobId) {
                 Favorite::create([
                     'user_id' => $user->id,
@@ -51,7 +44,6 @@ class DatabaseSeeder extends Seeder
             }
         });
 
-        // 5) seeding Applications بشكل آمن
         User::all()->each(function ($user) {
             $jobIds = Job::inRandomOrder()
                 ->take(rand(1, 3))
@@ -66,7 +58,4 @@ class DatabaseSeeder extends Seeder
             }
         });
     }
-//        // 4) عينات لحفظ الوظائف والتقديم
-//        \App\Models\Favorite::factory(20)->create();
-//        \App\Models\Application::factory(15)->create();
 }

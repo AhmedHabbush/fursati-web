@@ -7,7 +7,6 @@ class FAQController extends Controller
 {
     protected $faqs = [
         ['id'=>1,'question'=>'What is Fursa?','answer'=>'Fursa is…'],
-        // …
     ];
 
     // GET /ar/api/faqs

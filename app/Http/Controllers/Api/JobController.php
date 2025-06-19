@@ -95,7 +95,7 @@ class JobController extends Controller
         // 2) تأكّد من وجود الوظيفة
         $job = Job::findOrFail($id);
 
-        // 3) اربط في جدول applications (many-to-many)
+        // 3) ربط في جدول applications (many-to-many)
         try {
             $user->appliedJobs()       // علاقة many-to-many في نموذج User
             ->syncWithoutDetaching($job->id);

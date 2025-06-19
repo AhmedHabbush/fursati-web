@@ -39,7 +39,7 @@ class SettingsController extends Controller
         return view('settings.faqs', compact('faqs'));
     }
 
-    // صفحة تفاصيل سؤال واحد (اختياري)
+    // صفحة تفاصيل سؤال واحد
     public function faqDetail($id)
     {
         $faq = Faq::findOrFail($id);
@@ -89,7 +89,7 @@ class SettingsController extends Controller
             }
         }
 
-        // 3. (اختياري) يمكنك هنا إرسال رسالة بريد أو تخزين البيانات في DB
+        // 3. يمكنك هنا إرسال رسالة بريد أو تخزين البيانات في DB
         // مثلاً: Mail::to(config('mail.support'))->send(new HelpFeedbackMail($data, $savedFiles));
 
         // 4. رجع للمستخدم برسالة نجاح

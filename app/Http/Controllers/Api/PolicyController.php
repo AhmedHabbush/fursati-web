@@ -7,7 +7,6 @@ class PolicyController extends Controller
 {
     protected $policies = [
         ['id'=>1,'title'=>'Privacy Policy','content'=>'Your privacy is…'],
-        // …
     ];
 
     // GET /ar/api/policies
